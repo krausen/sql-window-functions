@@ -5,6 +5,8 @@ Demonstrating the use of window functions in sql, initialize the db with `./init
 
 ## Deduplicate and keeping the latest ingested value
 
+Partition by event_id which is unique, then select only the first row in each partition.
+
 ```sql
 SELECT COUNT(*) 
 FROM 
@@ -15,6 +17,8 @@ WHERE rn=1;
 ```
 
 ## Running count for number of streams
+
+Compute a running count up until the current row.
 
 ```sql
 SELECT
@@ -29,6 +33,8 @@ ORDER BY stream_started;
 
 ## Show previous and next stream time for song 0
 
+We can look at leading and lagging rows for an individual row.
+
 ```sql
 SELECT
     event_id,
@@ -42,6 +48,8 @@ WHERE song_id = 0;
 
 ## Show total number of streams for the song and the total number of streams in the channel
 
+Count the number of streams for a song and the total number of streams for all songs in the channel it belongs to.
+
 ```sql
 SELECT
     event_id,
@@ -50,4 +58,25 @@ SELECT
     COUNT(song_id) OVER (PARTITION BY song_id) as total_streams_of_this_song, 
     COUNT(song_id) OVER (PARTITION BY channel) as total_streams_in_channel
 FROM streams;
+```
+
+# Rank each song by number of streams on channel
+
+```sql
+WITH song_count AS (
+    SELECT song_name, COUNT(song_id) AS total_streams_on_channel, channel
+    FROM streams
+    GROUP BY song_id, song_name, channel
+),
+song_rank AS (
+    SELECT
+        song_name,
+        channel,
+        total_streams_on_channel,
+        DENSE_RANK() OVER (PARTITION BY channel ORDER BY total_streams_on_channel DESC) AS rank_on_channel
+    FROM song_count
+)
+SELECT *
+FROM song_rank
+WHERE rank_on_channel <= 3;
 ```
