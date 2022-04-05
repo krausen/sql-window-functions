@@ -44,4 +44,4 @@ def _populate_database(n_rows, songs, duplicates=False):
 if __name__ == "__main__":
     with open("songs.csv") as csv_file:
         songs = list(csv.reader(csv_file, delimiter=","))
-    _populate_database(10**3, songs)
+    _populate_database(10**5, songs)

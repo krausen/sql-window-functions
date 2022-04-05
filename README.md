@@ -80,3 +80,23 @@ SELECT *
 FROM song_rank
 WHERE rank_on_channel <= 3;
 ```
+
+# Find the most and least streamed song
+
+```sql
+WITH song_count AS (
+    SELECT song_name,
+    COUNT(song_id) AS total_streams
+    FROM streams
+    GROUP BY song_id, song_name
+)
+SELECT song_name, total_streams
+FROM (
+    SELECT song_name,
+           MIN(total_streams) OVER() min_streams,
+           MAX(total_streams) OVER() max_streams,
+           total_streams
+    FROM song_count
+) tmp
+WHERE total_streams IN (min_streams, max_streams);
+```
